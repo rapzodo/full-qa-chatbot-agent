@@ -44,11 +44,14 @@ Start the Streamlit app:
 streamlit run src/chatbot/app.py
 ```
 
-### Adding Documents
-Place your PDF or other supported files in the `files/` directory. The chatbot will use these documents as context for answering questions.
+### Uploading Documents
+You can now upload PDF, Word, or CSV files directly through the app interface using the file uploader. Uploaded files are automatically saved to the `files/` directory and immediately processed for document embedding—no manual copying or extra button clicks required.
+
+- After uploading, you will see a confirmation message and the documents will be ready for question answering.
 
 ## Usage
 - Open the app in your browser (Streamlit will provide a local URL).
+- Upload your documents using the file uploader at the top of the RAG mode interface.
 - Enter your question in the chat box and submit.
 - The chatbot will respond with an answer and show relevant context from your documents.
 
@@ -57,4 +60,3 @@ MIT License
 
 ## Author
 Danilo De Castro
-
