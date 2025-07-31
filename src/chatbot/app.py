@@ -60,7 +60,13 @@ def create_vector_embeddings():
 
 
 def rag_search_ui(model, temp, max_tokens):
-    if st.button("Document embedding"):
+    uploader = st.file_uploader("Upload files", ["pdf", "word", "csv"], accept_multiple_files=True)
+    if uploader:
+        for uploaded_file in uploader:
+            save_path = os.path.join("files", uploaded_file.name)
+            with open(save_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+        st.success("Files uploaded and saved")
         create_vector_embeddings()
         st.write("Docs loaded!")
 
