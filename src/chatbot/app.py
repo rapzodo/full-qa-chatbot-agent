@@ -1,23 +1,16 @@
-import os
-
 import streamlit as st
 from dotenv import load_dotenv
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains.retrieval import create_retrieval_chain
-from langchain_community.vectorstores import Chroma
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_groq import ChatGroq
-from langchain_community.document_loaders import PyPDFDirectoryLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_ollama import OllamaEmbeddings
-from langchain_openai import OpenAIEmbeddings
+
+from src.chatbot.util.util_functions import get_groc_model, document_upload
 
 GROQ_MODELS = ["gemma2-9b-it", "llama-3.1-8b-instant", "llama-3.3-70b-versatile",
                "meta-llama/llama-guard-4-12b", "deepseek-r1-distill-llama-70b"]
 
 load_dotenv()
-
 
 def create_prompt():
     return ChatPromptTemplate(
@@ -28,7 +21,7 @@ def create_prompt():
     )
 
 
-def create_prompt_for_rag():
+def create_prompt_for_rag(preamble):
     return ChatPromptTemplate.from_template(
         """
         Answer the questions based on provided context only.
@@ -38,37 +31,17 @@ def create_prompt_for_rag():
         """
     )
 
-
-def get_groc_model(max_tokens, model_id, temperature):
-    return ChatGroq(model=model_id, api_key=os.getenv("GROQ_API_KEY"), temperature=temperature, max_tokens=max_tokens)
-
-
 def generate_response(user_question, model_id, temperature, max_tokens):
     llm = get_groc_model(max_tokens, model_id, temperature)
     chain = create_prompt() | llm | StrOutputParser()
     return chain.invoke({"question": user_question})
 
 
-def create_vector_embeddings():
-    if "vector_store" not in st.session_state:
-        st.session_state.embeddings = OpenAIEmbeddings()
-        st.session_state.loader = PyPDFDirectoryLoader("files")
-        st.session_state.docs = st.session_state.loader.load()
-        st.session_state.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-        st.session_state.chunks = st.session_state.text_splitter.split_documents(st.session_state.docs)
-        st.session_state.vector_store = Chroma.from_documents(st.session_state.docs, st.session_state.embeddings)
+
 
 
 def rag_search_ui(model, temp, max_tokens):
-    uploader = st.file_uploader("Upload files", ["pdf", "word", "csv"], accept_multiple_files=True)
-    if uploader:
-        for uploaded_file in uploader:
-            save_path = os.path.join("files", uploaded_file.name)
-            with open(save_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-        st.success("Files uploaded and saved")
-        create_vector_embeddings()
-        st.write("Docs loaded!")
+    document_upload()
 
     # Use a form to control when the query is submitted
     with st.form(key="rag_form", clear_on_submit=True):
@@ -87,6 +60,9 @@ def rag_search_ui(model, temp, max_tokens):
             for index, doc in enumerate(st.session_state.last_response["context"]):
                 st.write(doc)
                 st.write('------------')
+
+
+
 
 
 def chat_ui():
@@ -123,9 +99,9 @@ def set_rag_ui():
     model, selected_max_tokens, selected_temperature = set_base_ui()
     rag_search_ui(model, selected_temperature, selected_max_tokens)
 
-
-mode = st.sidebar.radio("Mode",["Chat", "RAG"])
-if mode == "RAG":
-    set_rag_ui()
-else:
-    chat_ui()
+if __name__ == "__main__":
+    mode = st.sidebar.radio("Mode",["Chat", "RAG"])
+    if mode == "RAG":
+        set_rag_ui()
+    else:
+        chat_ui()
