@@ -55,8 +55,5 @@ You can now upload PDF, Word, or CSV files directly through the app interface us
 - Enter your question in the chat box and submit.
 - The chatbot will respond with an answer and show relevant context from your documents.
 
-## License
-MIT License
-
 ## Author
 Danilo De Castro
